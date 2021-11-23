@@ -1,0 +1,48 @@
+<resources>
+
+<style name="NoActionBar" parent="android:Theme.Material.Light">
+    <item name="android:windowActionBar">false</item>
+    <item name="android:windowNoTitle">true</item>
+    <item name="android:statusBarColor">#006666</item>
+    <item name="android:textColor">@color/gray60</item>
+</style>
+
+<style name="MyTheme" parent="android:Theme.Material.Light">
+    <item name="android:actionBarStyle">@style/MyTheme.ActionBarStyle</item>
+    <item name="android:statusBarColor">#006666</item>
+    <item name="android:textColor">@color/gray60</item>
+</style>
+
+<style name="MyTheme.ActionBarStyle" parent="@android:style/Widget.Material.ActionBar">
+    <item name="android:background">@color/base</item>
+    <item name="android:statusBarColor">#006666</item>
+    <item name="android:textColorSecondary">@color/white</item>
+</style>
+
+<style name="MyTheme.ProgressDialog" parent="android:Theme.Material.Light.Dialog">
+    <item name="android:textColor">@color/gray80</item>
+    <item name="android:textColorSecondary">@color/gray80</item>
+</style>
+
+<style name="MyTheme.ButtonPanel">
+    <item name="android:layout_width">wrap_content</item>
+    <item name="android:layout_height">wrap_content</item>
+    <item name="android:layout_alignParentEnd">true</item>
+    <item name="android:layout_margin">10dp</item>
+    <item name="android:orientation">vertical</item>
+    <item name="android:layout_centerVertical">true</item>
+    <item name="android:gravity">center</item>
+</style>
+
+<style name="MyTheme.Button">
+    <item name="android:layout_width">80dp</item>
+    <item name="android:layout_height">80dp</item>
+    <item name="android:padding">15dp</item>
+    <item name="android:layout_marginBottom">10dp</item>
+    <item name="android:gravity">center</item>
+    <item name="android:tint">@color/white</item>
+    <item name="android:contentDescription">button</item>
+    <item name="android:background">@drawable/round_button_def</item>
+</style>
+
+</resources>

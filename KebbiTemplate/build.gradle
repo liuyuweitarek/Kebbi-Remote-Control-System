@@ -1,0 +1,89 @@
+apply plugin: 'com.android.application'
+apply plugin: 'com.google.protobuf'
+
+ext {
+    grpcVersion = '1.4.0'
+}
+
+android {
+    compileSdkVersion 30
+    buildToolsVersion "30.0.3"
+    defaultConfig {
+        applicationId "ntu.mil.grpckebbi"
+        minSdkVersion 26
+        targetSdkVersion 30
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+//    configurations {
+//        all*.exclude group: 'com.google.code.gson'
+//    }
+    compileOptions {
+        sourceCompatibility = '1.8'
+        targetCompatibility = '1.8'
+    }
+}
+
+protobuf {
+    protoc {
+        artifact = 'com.google.protobuf:protoc:3.3.0'
+    }
+    plugins {
+        javalite {
+            artifact = "com.google.protobuf:protoc-gen-javalite:3.0.0"
+        }
+        grpc {
+            artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}"
+        }
+    }
+    generateProtoTasks {
+        all().each { task ->
+            task.plugins {
+                javalite {}
+                grpc {
+                    option 'lite'
+                }
+            }
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'androidx.appcompat:appcompat:1.3.1'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
+    // For RobotCommand getter setter
+    implementation 'com.google.code.gson:gson:2.8.5'
+    // For Broadcast
+    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.0.0'
+
+    // Kebbi SDK
+    implementation (name:'NuwaSDK-2021-07-08_1058_2.1.0.08_e21fe7', ext:'aar')
+    implementation (name:'NuwaBLEInterface_2020-11-27_v1.0_62415eb_release', ext:'aar')
+
+    //gRPC Client
+    implementation "io.grpc:grpc-okhttp:${grpcVersion}"
+    implementation "io.grpc:grpc-protobuf-lite:${grpcVersion}"
+    implementation "io.grpc:grpc-stub:${grpcVersion}"
+    implementation 'javax.annotation:javax.annotation-api:1.3.2'
+    protobuf 'com.google.protobuf:protobuf-java:3.3.1'
+
+}
+
+
+// Add SDK_PATH
+repositories {
+    flatDir {
+        dirs'libs'
+    }
+}

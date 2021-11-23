@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="shade_1" type="color">#006666</color>
+    <color name="base" type="color">#008080</color>
+    <color name="tint_1" type="color">#329999</color>
+    <color name="tint_3" type="color">#e2ffff</color>
+
+    <color name="white" type="color">#ffffff</color>
+    <color name="gray5" type="color">#eeeeee</color>
+    <color name="gray10" type="color">#dddddd</color>
+    <color name="gray40" type="color">#999999</color>
+    <color name="gray60" type="color">#666666</color>
+    <color name="gray80" type="color">#333333</color>
+    <color name="black" type="color">#000000</color>
+    <color name="black_semi" type="color">#AA000000</color>
+
+    <color name="pos_btn_idle" type="color">#2db22d</color>
+    <color name="pos_btn_press" type="color">#23850e</color>
+
+    <color name="neg_btn_idle" type="color">#b81414</color>
+    <color name="neg_btn_press" type="color">#850e0e</color>
+
+    <color name="yellow" type="color">#ffae42</color>
+
+    <color name="r5" type="color">#FF0000</color>
+    <color name="r4" type="color">#FF3333</color>
+    <color name="r3" type="color">#FF6666</color>
+    <color name="r2" type="color">#FF9999</color>
+    <color name="r1" type="color">#FFCCCC</color>
+    <color name="w0" type="color">#FFFFFF</color>
+    <color name="g1" type="color">#CCFFCC</color>
+    <color name="g2" type="color">#99FF99</color>
+    <color name="g3" type="color">#66FF66</color>
+    <color name="g4" type="color">#33FF33</color>
+    <color name="g5" type="color">#00FF00</color>
+    <color name="g6" type="color">#00CC00</color>
+
+    <color name="event_color_01">#a9edef</color>
+    <color name="event_color_02">#fbd59d</color>
+    <color name="event_color_03">#f9ae9f</color>
+    <color name="event_color_04">#b5e3b6</color>
+    <color name="event_color_05">#c3abd0</color>
+
+    <color name="scale1">#f4e553</color>
+    <color name="scale1p">#f1dc22</color>
+
+    <color name="scale2">#f2aa3a</color>
+    <color name="scale2p">#eb970f</color>
+
+    <color name="scale3">#ea6d42</color>
+    <color name="scale3p">#e14b19</color>
+
+    <color name="scale4">#d80747</color>
+    <color name="scale4p">#a80536</color>
+
+    <color name="scale5">#a90256</color>
+    <color name="scale5p">#79013d</color>
+
+    <color name="status_hearing">#7B1FA2</color>
+    <color name="status_not_hearing">#757575</color>
+
+</resources>
+

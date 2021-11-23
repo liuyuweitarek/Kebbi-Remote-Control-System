@@ -1,0 +1,43 @@
+/**
+ * Send Message between  Kebbi and Python Server.
+ */
+
+ syntax = "proto3";
+
+ option java_multiple_files = true;
+ option java_package = "com.interaction.robot.interaction";
+ option java_outer_classname = "InteractProto";
+ option objc_class_prefix = "ST";
+
+ package interaction;
+
+ // The interact service definition.
+ service Interact {
+   // Sends connection confirm
+   rpc RobotConnect (RobotConnectRequest) returns (RobotConnectReply) {}
+
+   // Sends information
+   rpc RobotSend (RobotInput) returns (RobotOutput) {}
+
+ }
+
+ // The robot connect request message contains the status
+ message RobotConnectRequest {
+   string status = 1;
+ }
+
+ // The robot connect response message contains the status
+ message RobotConnectReply {
+   string status = 1;
+ }
+
+ // The robot input message contains the utterance
+ message RobotInput {
+   string utterance = 1;
+ }
+
+ // The robot output info message contains the utterance
+ message RobotOutput {
+   string utterance = 1;
+ }
+

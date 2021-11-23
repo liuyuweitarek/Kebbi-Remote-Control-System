@@ -1,0 +1,1 @@
+protoc -I=. --python_out=../../../../Kebbi_gRPC_PyServer ./interaction.proto

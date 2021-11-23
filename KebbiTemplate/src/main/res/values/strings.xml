@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">grpckebbi</string>
+    <string name="def_ip">192.168.0.1</string>
+    <string name="def_port">50051</string>
+
+    <string name="rec" translatable="false">REC</string>
+    <string name="version">Ver. 0.1.0 (10/2021)</string>
+
+    <string name="listening">Listening…</string>
+
+    <string name="api_button">Get STT Result</string>
+    <string name="api_result">Press the button to get the result.</string>
+    <string name="audio_name">audio.wav</string>
+</resources>
