@@ -1,0 +1,1 @@
+# Android：Request Permission when app be installed in the first time

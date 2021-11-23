@@ -1,0 +1,12 @@
+﻿Task,Theme,Correlated Function,TODO,Date,Task Note,Github
+Use NuwaRobotAPI and set DebugMode,Structure,NuwaRobotAPI,,"November 8, 2021","1. https://www.notion.so/d109ef43c44b41c6851dcd55b66dede8
+2. https://www.notion.so/18adbb087c0645678e163c4e72b73b5f",https://www.notion.so/6b4dd69a6257426f8415a3d7a9d6b6e6
+學習並重新評估gRPC架構,Structure,,,"November 9, 2021",https://www.notion.so/dca9e59e43834a39bf9cefcf146635b3,
+NuwaRobotAPI.setSpeakParameter()文件用法錯誤,"Document Error, Parameters",Voice,"Ask, Better","November 12, 2021",https://www.notion.so/2b42ebcde281437aa76a446474d2aaea(),
+Request Permission,Android,,,"November 13, 2021",https://www.notion.so/dfbd3d9c3597467da0eac55d19ed3a79,
+SharedPreferences,Android,,,"November 13, 2021",,
+Context,Android,,,"November 14, 2021",https://www.notion.so/e3962e608efa47cd8d7a9a2587f35cba,
+Broadcast,Android,,,"November 15, 2021",,
+Nuwa com.nuwarobotics.service.facecontrol(),"Document Improvement, Methods",Face Control,,"November 17, 2021",com.https://www.notion.so/550ca637b60049dcb302ab87dc841851.service.facecontrol(),
+Define Robot Listener with Interface,"Android, Structure",,,"November 20, 2021",https://www.notion.so/62b84fd3d5c24eabbaf4e981ffc4234b,
+,,,,,,
