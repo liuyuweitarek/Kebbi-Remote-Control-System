@@ -29,11 +29,12 @@ import static ntu.mil.grpckebbi.Utils.Constants.COMMAND_SUCCESS;
 import static ntu.mil.grpckebbi.Utils.Constants.COMMAND_FAILED;
 
 import static ntu.mil.grpckebbi.MainActivity.mRobotAPI;
-
 import static ntu.mil.grpckebbi.Network.Connection.mInteracter;
+import static ntu.mil.grpckebbi.RobotActivity.nuwa_listenResult;
+import ntu.mil.grpckebbi.Voice.Speak;
 
 public class GrpcClientActivity extends Activity{
-    static final String TAG = GrpcClientActivity.class.getSimpleName();
+    public static final String TAG = GrpcClientActivity.class.getSimpleName();
 
     public static Connection mConnection;
     public TextView localIp;
@@ -56,6 +57,7 @@ public class GrpcClientActivity extends Activity{
         WindowUtils.updateUI(GrpcClientActivity.this);
         if(localIp != null)
             localIp.setText(mConnection.GetLocalIpAddress());
+
     }
 
 
@@ -76,8 +78,6 @@ public class GrpcClientActivity extends Activity{
         }
         return super.onOptionsItemSelected(item);
     }
-
-
 
 
     // Grpc Communicate Protocal Method
@@ -108,8 +108,10 @@ public class GrpcClientActivity extends Activity{
         Log.d(TAG, "executeAction()" + robotCommand.toString());
         switch (robotCommand.getIntent()) {
             case "say":
-                mRobotAPI.startTTS(robotCommand.getValue());
-                sendReply(COMMAND_SUCCESS, null);
+                Speak.say(robotCommand.getValue());
+                break;
+            case "listen":
+                Speak.sayThenListen(robotCommand.getValue());
                 break;
             default:
                 sendReply(COMMAND_FAILED, "command not found");

@@ -116,12 +116,21 @@ class Server(interaction_pb2_grpc.InteractServicer):
 
         return interaction_pb2.RobotOutput(utterance=self.robot_command)
     # def say(self, speech, listen=False, expression=None):
-    def say(self, speech):
+    def say(self, speech, listen=False):
         output = {}
 
+        if speech == '':
+            listen = True
+        
         output['value'] = speech
-        output['intent'] = 'say'
-        self.log.info('say: ' + speech)
+        
+        if listen:
+            output['intent'] = 'listen'
+            self.log.info('say and listen: ' + speech)
+        else:
+            output['intent'] = 'say'
+            self.log.info('say: ' + speech)
+
         self.robot_command = json.dumps(output)
         
         while self.robot_command != None:

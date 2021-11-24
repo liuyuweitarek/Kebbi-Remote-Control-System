@@ -42,7 +42,8 @@ class MainLoop(object):
             if inputText in ['exit', 'bye']:
                 sign = False
                 inputText = "好的 bye bye"
-            self.robot.say(inputText)
+            self.robot.say(inputText, listen=False)
+            
         
         input('Press enter again to terminate program...')
         os._exit(0)

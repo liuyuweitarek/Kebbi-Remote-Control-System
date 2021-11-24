@@ -14,6 +14,7 @@ import com.nuwarobotics.service.IClientId;
 import com.nuwarobotics.service.agent.NuwaRobotAPI;
 import com.nuwarobotics.service.agent.RobotEventListener;
 import com.nuwarobotics.service.agent.VoiceEventListener;
+import com.nuwarobotics.service.agent.VoiceResultJsonParser;
 
 import static android.service.controls.ControlsProviderService.TAG;
 import static ntu.mil.grpckebbi.MainActivity.getContext;
@@ -25,9 +26,11 @@ public class RobotActivity extends AppCompatActivity {
     public VoiceEventListener voiceEventListener;
     public RobotEventListener robotEventListener;
 
+    public static String nuwa_listenResult;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        this.nuwa_listenResult = "";
         this.iClientId = new IClientId(this.getPackageName());
         this.robotAPI = new NuwaRobotAPI(this,iClientId);
         this.voiceEventListener = new VoiceEventListener() {
@@ -48,7 +51,7 @@ public class RobotActivity extends AppCompatActivity {
 
             @Override
             public void onSpeech2TextComplete(boolean b, String s) {
-
+                nuwa_listenResult = VoiceResultJsonParser.parseVoiceResult(s); ;
             }
 
             @Override
@@ -248,9 +251,4 @@ public class RobotActivity extends AppCompatActivity {
         robotAPI.release();
     }
 
-    private static void sendLocalBroadcast(String action, String data){
-        Intent intent = new Intent(action);
-        intent.putExtra("result", data);
-        LocalBroadcastManager.getInstance(getContext()).sendBroadcast(intent);
-    }
 }
