@@ -39,15 +39,21 @@ import static ntu.mil.grpckebbi.Utils.Constants.COMMAND_FAILED;
 
 import static ntu.mil.grpckebbi.MainActivity.mRobotAPI;
 import static ntu.mil.grpckebbi.Vision.Constants.MODE_RECORD;
+import static ntu.mil.grpckebbi.Vision.Constants.STREAM_STARTED;
+import static ntu.mil.grpckebbi.Vision.Constants.STREAM_CONNECTED;
+import static ntu.mil.grpckebbi.Vision.Constants.STREAM_CANCELED;
+import static ntu.mil.grpckebbi.Vision.Constants.STREAM_OFF;
+import static ntu.mil.grpckebbi.Vision.Constants.STREAM_PORT;
 
 import ntu.mil.grpckebbi.Vision.DetectService;
-import ntu.mil.grpckebbi.Vision.RecordListener;
+import ntu.mil.grpckebbi.Vision.VideoRecordListener;
+import ntu.mil.grpckebbi.Vision.VideoStreamService;
 import ntu.mil.grpckebbi.Voice.Speak;
 
 public class GrpcClientActivity extends Activity{
     public static final String TAG = GrpcClientActivity.class.getSimpleName();
 
-    // Grpc Connection
+    /** Grpc Connection UI Params */
     private EditText ip_1, ip_2, ip_3, ip_4, host_port;
     private String ip;
     private TextView localIp;
@@ -56,18 +62,18 @@ public class GrpcClientActivity extends Activity{
     public static InteractGrpc.InteractBlockingStub mInteracter;
 
 
-    // Service
+    /** Services State Params */
     private static boolean serviceActive = false;
     private static boolean serviceBound;
     private static int cameraMode;
     private static boolean messageConfirmed;
 
-    private static final int CODE_REMOTE_AI = 14;
-
+    /** Make other Classes could use sendReply() / excecuteAction() */
     public static GrpcClientActivity getInstance() {
         return mGrpcContext;
     }
 
+    /** Grpc Activity Life Cycle */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -78,6 +84,33 @@ public class GrpcClientActivity extends Activity{
         AssignIps();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        WindowUtils.updateUI(GrpcClientActivity.this);
+        if(localIp != null)
+            localIp.setText(GetLocalIpAddress());
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mRobotAPI.hideFace();
+    }
+
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    /** gRPC Connection Methods */
     private void SetupUI(){
         ip_1 = findViewById(R.id.ip1);
         ip_2 = findViewById(R.id.ip2);
@@ -183,35 +216,7 @@ public class GrpcClientActivity extends Activity{
         editor.apply();
     }
 
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        WindowUtils.updateUI(GrpcClientActivity.this);
-        if(localIp != null)
-            localIp.setText(GetLocalIpAddress());
-    }
-
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        mRobotAPI.hideFace();
-    }
-
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                finish();
-                return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-
-    // Grpc Communicate Protocal Method
+    /** gRPC Communicate Protocal Method */
     public void sendReply(String intent, String value){
         Log.d(TAG, "sendReply()" + intent + value);
         new Thread(){
@@ -245,16 +250,16 @@ public class GrpcClientActivity extends Activity{
                 break;
             case "video_record":
                 if(robotCommand.getValue().equals("start")){
-                    if(!serviceActive) {
-                        startRecording();
-                    }else
-                        sendReply(COMMAND_FAILED, "A camera service is already running, stop that service first");
+                    if(!serviceActive) startRecording(); else sendReply(COMMAND_FAILED, "A camera service is already running, stop that service first");
+                } else if(robotCommand.getValue().equals("stop"))
+                    if(serviceActive) stopDetectService(); else sendReply(COMMAND_FAILED, "No services are currently running");
+                break;
+            case "video_stream":
+                if (robotCommand.getValue().equals("start")){
+                    if(!serviceActive) startVideoStream(); else sendReply(COMMAND_FAILED, "A camera service is already running, stop that service first");
+                } else if (robotCommand.getValue().equals("stop")){
+                    if(serviceActive) stopVideoStream(); else sendReply(COMMAND_FAILED, "No services are currently runnung.");
                 }
-                else if(robotCommand.getValue().equals("stop"))
-                    if(serviceActive)
-                        stopDetectService();
-                    else
-                        sendReply(COMMAND_FAILED, "No services are currently running");
                 break;
             default:
                 sendReply(COMMAND_FAILED, "command not found");
@@ -262,16 +267,10 @@ public class GrpcClientActivity extends Activity{
         }
     }
 
-
-    private void stopDetectService(){
-        serviceActive = false;
-        messageConfirmed = false;
-        if(serviceBound)
-            mGrpcContext.unbindService(detectConnection);
-        serviceBound = false;
-        stopService(new Intent(this, DetectService.class));
-    }
-
+    /** Detection Service
+          * TODO: find_face -> move_to_face -> follow_people
+          * DONE: video_record
+       */
     protected ServiceConnection detectConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -282,21 +281,13 @@ public class GrpcClientActivity extends Activity{
             switch (cameraMode){
                 case MODE_RECORD:
                     Log.d(TAG, "here is record");
-                    detectService.addRecordListener(recordListener);
+                    detectService.addRecordListener(videoRecordListener);
                     break;
             }
         }
         @Override
         public void onServiceDisconnected(ComponentName name) {
             serviceBound = false;
-        }
-    };
-
-    private final RecordListener recordListener = recordFile ->  {
-        Log.d(TAG, "onStateChange()");
-        if(!messageConfirmed){
-            messageConfirmed = true;
-            sendReply(COMMAND_SUCCESS, recordFile);
         }
     };
 
@@ -312,4 +303,77 @@ public class GrpcClientActivity extends Activity{
         startService(intent);
         Log.d(TAG, "successfully start detectConnection");
     }
+
+    private final VideoRecordListener videoRecordListener = recordFile ->  {
+        Log.d(TAG, "onStateChange()");
+        if(!messageConfirmed){
+            messageConfirmed = true;
+            sendReply(COMMAND_SUCCESS, recordFile);
+        }
+    };
+
+    private void stopDetectService(){
+        serviceActive = false;
+        messageConfirmed = false;
+        if(serviceBound)
+            mGrpcContext.unbindService(detectConnection);
+        serviceBound = false;
+        stopService(new Intent(this, DetectService.class));
+    }
+
+    /** Video Stream Service */
+    protected ServiceConnection streamConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder service) {
+            Log.d(TAG, "onServiceConnected()");
+            VideoStreamService.LocalBinder localBinder = (VideoStreamService.LocalBinder) service;
+            VideoStreamService videoStreamService = localBinder.getService();
+            videoStreamService.registerVideoStreamListener(videoStreamState -> {
+                switch (videoStreamState) {
+                    case STREAM_STARTED:
+                        if(!messageConfirmed) {
+                            messageConfirmed = true;
+                            sendReply(COMMAND_SUCCESS, String.valueOf(STREAM_PORT));
+                        }
+                        break;
+                    case STREAM_CONNECTED:
+                        Log.d(TAG, "a client is listening to the stream!");
+                        break;
+                    case STREAM_CANCELED:
+                        Log.d(TAG, "stream off");
+                        stopVideoStream();
+                        break;
+                    case STREAM_OFF:
+                        if(!messageConfirmed) {
+                            messageConfirmed = true;
+                            sendReply(COMMAND_SUCCESS, null);
+                        }
+                        break;
+                }
+            });
+            serviceBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            serviceBound = false;
+        }
+    };
+
+    private void startVideoStream() {
+        serviceActive = true;
+        messageConfirmed = false;
+        Intent intent = new Intent(this, VideoStreamService.class);
+        bindService(intent, streamConnection, Context.BIND_AUTO_CREATE);
+        startService(intent);
+    }
+
+    private void stopVideoStream() {
+        serviceActive = false;
+        messageConfirmed = false;
+        if(serviceBound) unbindService(streamConnection);
+        stopService(new Intent(this, VideoStreamService.class));
+    }
+
+    /** Voice Service */
 }

@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
-import android.graphics.PixelFormat;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
@@ -21,7 +20,6 @@ import android.media.Image;
 import android.media.ImageReader;
 import android.media.MediaRecorder;
 import android.os.Binder;
-import android.os.Build;
 import android.os.CountDownTimer;
 import android.os.Environment;
 import android.os.IBinder;
@@ -29,9 +27,7 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
-import android.view.LayoutInflater;
 import android.view.Surface;
-import android.view.TextureView;
 import android.view.View;
 import android.view.WindowManager;
 
@@ -49,9 +45,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-
-import ntu.mil.grpckebbi.R;
-
+import ntu.mil.grpckebbi.Vision.GraphicOverlay;
 import static ntu.mil.grpckebbi.Vision.Constants.MODE_FACE_DETECTION;
 import static ntu.mil.grpckebbi.Vision.Constants.MODE_RECORD;
 
@@ -67,7 +61,7 @@ public class DetectService  extends Service implements ImageReader.OnImageAvaila
 
     // Camera Utils Object
     private MediaRecorder mMediaRecorder;
-    private final List<RecordListener> recordStateListeners = new ArrayList<>();
+    private final List<VideoRecordListener> recordStateListeners = new ArrayList<>();
     private String outputFile;
 
     // Camera Utils Params
@@ -148,7 +142,7 @@ public class DetectService  extends Service implements ImageReader.OnImageAvaila
                 public void onFinish() {
                     switch (cameraMode) {
                         case MODE_RECORD:
-                            for (RecordListener listener : recordStateListeners)
+                            for (VideoRecordListener listener : recordStateListeners)
                                 listener.onStateChange(null);
                             break;
                     }
@@ -430,7 +424,7 @@ public class DetectService  extends Service implements ImageReader.OnImageAvaila
                 surfaces.add(mMediaRecorder.getSurface());
                 if(mMediaRecorder != null)
                     mMediaRecorder.start();
-                for(RecordListener listener : recordStateListeners)
+                for(VideoRecordListener listener : recordStateListeners)
                     listener.onStateChange(null);
             }
             cameraDevice.createCaptureSession(surfaces, previewCallback, null);
@@ -442,7 +436,7 @@ public class DetectService  extends Service implements ImageReader.OnImageAvaila
 
     private void closePreview() {
         try{
-            for(RecordListener listener : recordStateListeners)
+            for(VideoRecordListener listener : recordStateListeners)
                 listener.onStateChange(outputFile);
 
             if(session != null){
@@ -533,7 +527,7 @@ public class DetectService  extends Service implements ImageReader.OnImageAvaila
     }
 
     // Public Method For adding Camera Service
-    public void addRecordListener (@NonNull RecordListener listener){
+    public void addRecordListener (@NonNull VideoRecordListener listener){
         recordStateListeners.add(listener);
     }
 }

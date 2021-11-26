@@ -17,7 +17,6 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.MenuItem;
-import android.widget.Toast;
 
 import com.nuwarobotics.service.IClientId;
 import com.nuwarobotics.service.agent.NuwaRobotAPI;
@@ -26,9 +25,6 @@ import com.nuwarobotics.service.agent.VoiceEventListener;
 
 
 import ntu.mil.grpckebbi.Utils.PrefsHelper;
-
-
-
 
 import static ntu.mil.grpckebbi.Utils.Constants.LOCALE;
 
@@ -40,7 +36,7 @@ public class MainActivity extends RobotActivity{
     private static final int ACTIVITY = 123;
 
     public static NuwaRobotAPI mRobotAPI;
-    private IClientId mClientId;
+    private static IClientId mClientId;
     private static Context mContext;
 
     public static String locale;

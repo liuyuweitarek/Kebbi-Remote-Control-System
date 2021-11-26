@@ -129,6 +129,34 @@ class Server(interaction_pb2_grpc.InteractServicer):
         
         return self.robot_response
 
+    def videoStream(self, value):
+        """
+        Use this method to enable/disable video streaming from the robot
+        Arguments:
+            value: "start": command the robot to start streaming; "stop": command the robot to stop streaming
+        Returns:
+            On successful start, returns the port where the video is being streamed
+        Notes:
+            Video streaming requires a viewfinder to be shown on the robots' screen. This cannot be disabled.
+            If the connection to the server is lost (i.e. when the server-side program is interrupted), the stream will stop automatically.
+            There are four services that use the camera: takePhoto, takeVideo, videoStream and videoRecord. Only one can be active at a time.
+            If you attempt to call any of these while any another is active, an error message will be returned. 
+        """
+
+        if value == None:
+            raise ValueError(self.ERR_EMPTY_ARGS)
+
+        output = {}
+        output['intent'] = 'video_stream'
+        output['value'] = value
+        self.log.info('video stream ' + value)
+        self.robot_command = json.dumps(output)
+        
+        while self.robot_command != None:
+            time.sleep(0.1)
+        
+        return self.robot_response
+
     def videoRecord(self, value):
         """
         Use this method to enable/disable video streaming from the robot

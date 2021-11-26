@@ -250,5 +250,4 @@ public class RobotActivity extends AppCompatActivity {
         super.onDestroy();
         robotAPI.release();
     }
-
 }

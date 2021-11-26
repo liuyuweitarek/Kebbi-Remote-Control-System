@@ -3,11 +3,11 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:padding="10dp">
-    <ntu.airobo.grpcclient.Vision.AutoFitTextureView
+    <ntu.mil.grpckebbi.Vision.AutoFitTextureView
         android:id="@+id/texture_photo"
         android:layout_width="160dp"
         android:layout_height="120dp"/>
-    <ntu.airobo.grpcclient.Vision.GraphicOverlay
+    <ntu.mil.grpckebbi.Vision.GraphicOverlay
         android:id="@+id/overlay_view"
         android:layout_width="160dp"
         android:layout_height="120dp" />
