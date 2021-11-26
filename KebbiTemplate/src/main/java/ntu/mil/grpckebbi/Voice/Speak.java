@@ -4,7 +4,6 @@ import android.util.Log;
 
 
 import ntu.mil.grpckebbi.GrpcClientActivity;
-import ntu.mil.grpckebbi.Utils.GrpcMessage;
 
 
 import static ntu.mil.grpckebbi.GrpcClientActivity.getInstance;
@@ -35,7 +34,6 @@ public class Speak {
                     mRobotAPI.startSpeech2Text(false);
                     Thread.sleep(10000);
                     mRobotAPI.stopListen();
-                    GrpcMessage mGrpcMessage = new GrpcMessage(COMMAND_SUCCESS, nuwa_listenResult);
                     ((GrpcClientActivity) getInstance()).sendReply(COMMAND_SUCCESS, nuwa_listenResult);
 
 

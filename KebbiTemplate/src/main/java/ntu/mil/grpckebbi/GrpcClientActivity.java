@@ -1,25 +1,19 @@
 package ntu.mil.grpckebbi;
 
 import android.app.Activity;
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.media.MediaActionSound;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.gson.Gson;
 import com.interaction.robot.interaction.InteractGrpc;
@@ -37,18 +31,13 @@ import java.util.List;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import ntu.mil.grpckebbi.Utils.GrpcMessage;
 import ntu.mil.grpckebbi.Utils.RobotCommand;
 import ntu.mil.grpckebbi.Utils.WindowUtils;
 
-import ntu.mil.grpckebbi.Utils.WindowUtils;
-
-import static ntu.mil.grpckebbi.MainActivity.TAG;
 import static ntu.mil.grpckebbi.Utils.Constants.COMMAND_SUCCESS;
 import static ntu.mil.grpckebbi.Utils.Constants.COMMAND_FAILED;
 
 import static ntu.mil.grpckebbi.MainActivity.mRobotAPI;
-import static ntu.mil.grpckebbi.RobotActivity.nuwa_listenResult;
 import static ntu.mil.grpckebbi.Vision.Constants.MODE_RECORD;
 
 import ntu.mil.grpckebbi.Vision.DetectService;

@@ -50,11 +50,14 @@ class MainLoop(object):
                 self.robot.say(inputText, listen=False)
                 input('Press enter again to terminate program...')
                 os._exit(0)
-            elif inputText in ['videostart']:
+
+            elif inputText == 'videostart':
                 self.robot.videoRecord('start')
-            elif inputText in ['videostop']:
+
+            elif inputText == 'videostop':
                 video_filename = self.robot.videoRecord('stop')
                 self.log.info("Video FileName:" + video_filename)
+
             else:
                 self.robot.say(inputText, listen=True)
             
