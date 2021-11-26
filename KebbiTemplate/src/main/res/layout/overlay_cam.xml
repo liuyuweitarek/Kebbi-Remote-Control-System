@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="10dp">
+    <ntu.airobo.grpcclient.Vision.AutoFitTextureView
+        android:id="@+id/texture_photo"
+        android:layout_width="160dp"
+        android:layout_height="120dp"/>
+    <ntu.airobo.grpcclient.Vision.GraphicOverlay
+        android:id="@+id/overlay_view"
+        android:layout_width="160dp"
+        android:layout_height="120dp" />
+</FrameLayout>

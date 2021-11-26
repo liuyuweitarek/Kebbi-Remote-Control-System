@@ -135,6 +135,35 @@ class Server(interaction_pb2_grpc.InteractServicer):
         
         while self.robot_command != None:
             time.sleep(0.1)
+
+        if listen:
+            self.log.info('Robot Heard: ' + self.robot_response)
+        
+        return self.robot_response
+
+    def videoRecord(self, value):
+        """
+        Use this method to enable/disable video streaming from the robot
+        Arguments:
+            value: "start": command the robot to start recording; "stop": command the robot to stop recording
+        Returns:
+            On stop, ff a video was succesfully stored, the robot will return its filename. Videos are stored in the Movies/bgRec directory.
+        Notes:
+            There are four services that use the camera: takePhoto, takeVideo, videoStream and videoRecord. Only one can be active at a time.
+            If you attempt to call any of these while any another is active, an error message will be returned. 
+        """
+
+        if value == None:
+            raise ValueError(self.ERR_EMPTY_ARGS)
+
+        output = {}
+        output['intent'] = 'video_record'
+        output['value'] = value
+        self.log.info('video record ' + value)
+        self.robot_command = json.dumps(output)
+        
+        while self.robot_command != None:
+            time.sleep(0.1)
         
         return self.robot_response
 

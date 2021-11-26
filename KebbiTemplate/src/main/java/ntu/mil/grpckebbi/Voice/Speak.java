@@ -2,22 +2,28 @@ package ntu.mil.grpckebbi.Voice;
 
 import android.util.Log;
 
-import ntu.mil.grpckebbi.GrpcClientActivity;
 
-import static ntu.mil.grpckebbi.GrpcClientActivity.sendReply;
+import ntu.mil.grpckebbi.GrpcClientActivity;
+import ntu.mil.grpckebbi.Utils.GrpcMessage;
+
+
+import static ntu.mil.grpckebbi.GrpcClientActivity.getInstance;
 import static ntu.mil.grpckebbi.MainActivity.mRobotAPI;
 import static ntu.mil.grpckebbi.GrpcClientActivity.TAG;
-import static ntu.mil.grpckebbi.RobotActivity.nuwa_listenResult;
-import static ntu.mil.grpckebbi.Utils.Constants.COMMAND_FAILED;
-import static ntu.mil.grpckebbi.Utils.Constants.COMMAND_SUCCESS;
 
-public interface Speak {
-    static void say(String speech){
+import static ntu.mil.grpckebbi.RobotActivity.nuwa_listenResult;
+import static ntu.mil.grpckebbi.Utils.Constants.COMMAND_SUCCESS;
+import static ntu.mil.grpckebbi.Utils.Constants.COMMAND_FAILED;
+
+
+
+public class Speak {
+    public static void say(String speech){
         mRobotAPI.startTTS(speech);
-        sendReply(COMMAND_SUCCESS, null);
+        ((GrpcClientActivity) getInstance()).sendReply(COMMAND_SUCCESS, null);
     }
 
-    static void sayThenListen(String speech) {
+    public static void sayThenListen(String speech) {
         nuwa_listenResult = "";
         new Thread(){
             @Override
@@ -29,11 +35,14 @@ public interface Speak {
                     mRobotAPI.startSpeech2Text(false);
                     Thread.sleep(10000);
                     mRobotAPI.stopListen();
-                    sendReply(COMMAND_SUCCESS, nuwa_listenResult);
+                    GrpcMessage mGrpcMessage = new GrpcMessage(COMMAND_SUCCESS, nuwa_listenResult);
+                    ((GrpcClientActivity) getInstance()).sendReply(COMMAND_SUCCESS, nuwa_listenResult);
+
+
                 } catch(Exception e) {
                     Log.d(TAG, "sendReply()" + e.toString());
                     mRobotAPI.hideFace();
-                    sendReply(COMMAND_FAILED, e.toString());
+                    ((GrpcClientActivity) getInstance()).sendReply(COMMAND_FAILED, e.toString());
                 }
             }
         }.start();
