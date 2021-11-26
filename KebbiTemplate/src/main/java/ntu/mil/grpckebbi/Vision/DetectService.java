@@ -121,6 +121,7 @@ public class DetectService  extends Service implements ImageReader.OnImageAvaila
     @Override
     public void onCreate() {
         super.onCreate();
+        Log.d(TAG, "onCreate()");
     }
 
     @Override
@@ -133,7 +134,7 @@ public class DetectService  extends Service implements ImageReader.OnImageAvaila
         }
 
         rotateEnabled = intent.getBooleanExtra("rotateEnabled", false);
-        cameraMode = intent.getIntExtra("cameraMode", MODE_FACE_DETECTION);
+        cameraMode = intent.getIntExtra("cameraMode", MODE_RECORD);
         showPreview = intent.getBooleanExtra("showPreview", false);
         int timeout = intent.getIntExtra("timeout", -1);
 

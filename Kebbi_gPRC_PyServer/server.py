@@ -54,7 +54,7 @@ class MainLoop(object):
                 self.robot.videoRecord('start')
             elif inputText in ['videostop']:
                 video_filename = self.robot.videoRecord('stop')
-                self.log("Video FileName:" + video_filename)
+                self.log.info("Video FileName:" + video_filename)
             else:
                 self.robot.say(inputText, listen=True)
             

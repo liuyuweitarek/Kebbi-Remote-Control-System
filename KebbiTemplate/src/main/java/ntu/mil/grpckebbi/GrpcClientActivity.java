@@ -278,7 +278,7 @@ public class GrpcClientActivity extends Activity{
         serviceActive = false;
         messageConfirmed = false;
         if(serviceBound)
-            unbindService(detectConnection);
+            mGrpcContext.unbindService(detectConnection);
         serviceBound = false;
         stopService(new Intent(this, DetectService.class));
     }
@@ -286,11 +286,13 @@ public class GrpcClientActivity extends Activity{
     protected ServiceConnection detectConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.d(TAG, "onServiceConnected()" + name.toString());
             DetectService.LocalBinder localBinder = (DetectService.LocalBinder) service;
             DetectService detectService = localBinder.getService();
             serviceBound = true;
             switch (cameraMode){
                 case MODE_RECORD:
+                    Log.d(TAG, "here is record");
                     detectService.addRecordListener(recordListener);
                     break;
             }
@@ -310,6 +312,7 @@ public class GrpcClientActivity extends Activity{
     };
 
     private void startRecording(){
+        Log.d(TAG, "startRecording()");
         cameraMode = MODE_RECORD;
         serviceActive = true;
         messageConfirmed = false;
@@ -318,5 +321,6 @@ public class GrpcClientActivity extends Activity{
         intent.putExtra("showPreview", false);
         bindService(intent, detectConnection, Context.BIND_AUTO_CREATE);
         startService(intent);
+        Log.d(TAG, "successfully start detectConnection");
     }
 }

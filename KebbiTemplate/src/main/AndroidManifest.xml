@@ -31,6 +31,8 @@
         </activity>
         <activity android:name="ntu.mil.grpckebbi.GrpcClientActivity"/>
 
+        <service android:name=".Vision.DetectService"
+            android:hardwareAccelerated="false"/>
     </application>
 
 </manifest>
