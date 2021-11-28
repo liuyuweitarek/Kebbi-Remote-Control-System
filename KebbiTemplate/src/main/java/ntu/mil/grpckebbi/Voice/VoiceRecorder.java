@@ -7,6 +7,7 @@ import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.speech.tts.Voice;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -45,10 +46,10 @@ public class VoiceRecorder {
         }
     }
 
-    private final Context mContext;
+    private static Context mContext;
     private final Callback mCallback;
     private AudioRecord mAudioRecord;
-    private Thread recordingThread, transcribingThread;
+    private Thread recordingThread;
     private byte[] mBuffer;
     private final Object mLock = new Object();
     private boolean isRecording = false;
@@ -63,11 +64,10 @@ public class VoiceRecorder {
         mCallback = callback;
     }
 
+
+
     public void start() {
         Log.d(TAG, "start()");
-        // Stop recording if it is currently ongoing.
-        //stop();
-
 
         // Try to create a new recording session.
         mAudioRecord = createAudioRecord();
@@ -78,40 +78,25 @@ public class VoiceRecorder {
         mAudioRecord.startRecording();
         isRecording = true;
 
-        transcribingThread = new Thread(new ProcessVoice());
-        transcribingThread.start();
-
-//        recordingThread = new Thread(new RecordAudio());
-//        recordingThread.start();
+        recordingThread = new Thread(new ProcessVoice());
+        recordingThread.start();
     }
 
     public void stop() {
         Log.d(TAG, "stop()");
-
         isRecording = false;
-//        if(recordingThread != null){
-//            Log.d("DebugTest","VoiceRecorder_STOP_Interrupt_RecordingThread_begin");
-//            recordingThread.interrupt();
-//            Log.d("DebugTest","VoiceRecorder_STOP_Interrupt_RecordingThread_after");
-//            recordingThread = null;
-//        }
-
         synchronized (mLock) {
             dismiss();
-
-            if (transcribingThread != null) {
-                Log.d("DebugTest","VoiceRecorder_STOP_Interrupt_TranscribingThread");
-                transcribingThread.interrupt();
-                transcribingThread = null;
+            if (recordingThread != null) {
+                recordingThread.interrupt();
+                recordingThread = null;
             }
             if (mAudioRecord != null) {
-                Log.d("DebugTest","VoiceRecorder_STOP_Interrupt_Stop_mAudioRecord");
                 mAudioRecord.stop();
                 mAudioRecord.release();
                 mAudioRecord = null;
             }
             mBuffer = null;
-
             copyWavFile(getTempFilename(), mFilename);
             deleteTempFile();
         }
@@ -164,10 +149,7 @@ public class VoiceRecorder {
 
             while (isRecording){
                 synchronized (mLock) {
-                    if (Thread.currentThread().isInterrupted()) {
-                        Log.d("DebugTest", "ProcessVoice_isInterrupt");
-                        break;
-                    }
+                    if (Thread.currentThread().isInterrupted()) break;
 
                     // Read voice bytes here. mBuffer has the info that we want to deal with.
                     final int read = mAudioRecord.read(mBuffer, 0, mBuffer.length);
@@ -176,35 +158,21 @@ public class VoiceRecorder {
                     // Record file here
                     if(AudioRecord.ERROR_INVALID_OPERATION != read){
                         try {
-                            Log.d("DebugTest","RecordAudio_AudioRecord.ERROR_INVALID_OPERATION != read Begin");
-                            Log.d("DebugTestLis", "繼續記錄聲音中");
-                            Log.d("DebugTestLis", "OPERATION:" + AudioRecord.ERROR_INVALID_OPERATION);
-                            Log.d("DebugTestLis", "READ:" + read);
                             os.write(mBuffer);
-                            Log.d("DebugTest","RecordAudio_AudioRecord.ERROR_INVALID_OPERATION != read End");
                         } catch (IOException e) {
-                            Log.d("DebugTest","RecordAudio_AudioRecord.ERROR_INVALID_OPERATION != read 烙賽");
-                            Log.d("DebugTestLis", "紀錄到烙賽了");
                             end();
                             try {
                                 os.close();
                             } catch (IOException err) {
                                 err.printStackTrace();
                             }
-
                             e.printStackTrace();
                         }
-                    } else {
-                        Log.d("DebugTestLis", "下方應一樣");
-                        Log.d("DebugTestLis", "OPERATION:" + AudioRecord.ERROR_INVALID_OPERATION);
-                        Log.d("DebugTestLis", "READ:" + read);
                     }
 
                     // Control the process of hearing voice here. (Heard / unHeard)
                     if (isHearingVoice(mBuffer, read)) {
-                        Log.d("DebugTest", "ProcessVoice_有聽到聲音");
                         if (mLastVoiceHeardMillis == Long.MAX_VALUE) {
-                            Log.d("DebugTestLis", "ProcessVoice_有被設成最大值並開始聆聽");
                             mVoiceStartedMillis = now;
                             sentenceCompleted = false;
                             mCallback.onVoiceStart(mFilename);
@@ -220,21 +188,16 @@ public class VoiceRecorder {
                         if (now - mVoiceStartedMillis > MAX_SPEECH_LENGTH_MILLIS) {
                             end();
                             try {
-
                                 os.close();
-
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
                         }
-                    }
-                    else if (mLastVoiceHeardMillis != Long.MAX_VALUE) {
+                    } else if (mLastVoiceHeardMillis != Long.MAX_VALUE) {
                         if ( now - mLastVoiceHeardMillis > SPEECH_TIMEOUT_MILLIS) {
                             sentenceCompleted = true;
                         }
                         mCallback.onVoice(mBuffer, read,sentenceCompleted);
-                        Log.d("DebugTestLis","從開始到聽到聲音" + (now - mLastVoiceHeardMillis));
-
                         if ( now - mLastVoiceHeardMillis > SPEECH_TIMEOUT_MILLIS) {
                             end();
                             try {
@@ -275,7 +238,6 @@ public class VoiceRecorder {
 
             long totalAudioLength = is.getChannel().size();
             long totalDataLength = totalAudioLength + 36;
-//            int channels = 2;
             int channels = CHANNEL == AudioFormat.CHANNEL_IN_MONO ? 1 : 2;
             long byteRate = RECORDER_BPP * SAMPLE_RATE * channels / 8;
             byte[] data = new byte[bufferSize];

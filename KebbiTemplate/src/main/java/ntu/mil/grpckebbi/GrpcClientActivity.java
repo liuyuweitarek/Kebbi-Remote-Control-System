@@ -48,7 +48,7 @@ import static ntu.mil.grpckebbi.Vision.Constants.STREAM_PORT;
 import ntu.mil.grpckebbi.Vision.DetectService;
 import ntu.mil.grpckebbi.Vision.VideoRecordListener;
 import ntu.mil.grpckebbi.Vision.VideoStreamService;
-import ntu.mil.grpckebbi.Voice.Speak;
+import ntu.mil.grpckebbi.Voice.SpeakUtil;
 
 public class GrpcClientActivity extends Activity{
     public static final String TAG = GrpcClientActivity.class.getSimpleName();
@@ -73,12 +73,17 @@ public class GrpcClientActivity extends Activity{
         return mGrpcContext;
     }
 
+
+
+    /** VoiceRecorder*/
+    public static SpeakUtil mSpeakTool;
     /** Grpc Activity Life Cycle */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_grpc_client);
         mGrpcContext = this;
+        mSpeakTool = new SpeakUtil();
         SetupUI();
         LoadData();
         AssignIps();
@@ -243,10 +248,10 @@ public class GrpcClientActivity extends Activity{
         Log.d(TAG, "executeAction()" + robotCommand.toString());
         switch (robotCommand.getIntent()) {
             case "say":
-                Speak.say(robotCommand.getValue());
+                mSpeakTool.say(robotCommand.getValue());
                 break;
             case "listen":
-                Speak.sayThenListen(robotCommand.getValue());
+                mSpeakTool.sayThenListen(robotCommand.getValue());
                 break;
             case "video_record":
                 if(robotCommand.getValue().equals("start")){
