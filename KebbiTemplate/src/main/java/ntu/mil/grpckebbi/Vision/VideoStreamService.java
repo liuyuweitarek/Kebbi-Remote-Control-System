@@ -69,7 +69,7 @@ import static ntu.mil.grpckebbi.Vision.Constants.STREAM_STARTED;
 public class VideoStreamService extends Service implements ImageReader.OnImageAvailableListener {
     private static final String TAG = VideoStreamService.class.getSimpleName();
 
-    // Preview Params
+    /** Preview Params */
     private static final int MINIMUM_PREVIEW_SIZE = 320;
     private static final Size DESIRED_PREVIEW_SIZE = new Size(320, 240);
     private Bitmap rgbFrameBitmap = null;
@@ -78,7 +78,7 @@ public class VideoStreamService extends Service implements ImageReader.OnImageAv
     protected int previewWidth = 0;
     protected int previewHeight = 0;
 
-    //  Camera Params
+    /** Camera Params */
     private static final int ONGOING_NOTIFICATION_ID = 6660;
     private static final String CHANNEL_ID = "cam_service_channel_id";
     private static final String CHANNEL_NAME = "cam_service_channel_name";
@@ -96,35 +96,34 @@ public class VideoStreamService extends Service implements ImageReader.OnImageAv
     private MediaRecorder mMediaRecorder;
     private Semaphore mCameraOpenCloseLock = new Semaphore(1);
 
-    // Background Image Hadler
+    /** Background Image Hadler */
     private HandlerThread mBackgroundThread;
     private Handler mBackgroundHandler;
 
-    // UI
+    /** UI */
     private View rootView = null;
     private AutoFitTextureView textureView = null;
     private WindowManager windowManager = null;
 
-    // Server
+    /** Server */
     private ServerThread serverThread;
 
-    // Utils
+    /** Utils */
     private boolean shouldRecord = false;
     private Runnable postInferenceCallback;
     private Runnable imageConverter;
     private Handler handler;
     private HandlerThread handlerThread;
-
     private VideoStreamListener videoStreamListener;
 
-    // Stream Buffer
+    /** Stream Buffer */
     private int[] rgbBytes = null;
     private boolean isProcessingFrame = false;
     private int yRowStride;
     private byte[][] yuvBytes = new byte[3][];
 
 
-    // Life Cycle
+    /** Service Life Cycle */
     @Override
     public void onCreate() {
         handlerThread = new HandlerThread("video_stream");
@@ -133,36 +132,11 @@ public class VideoStreamService extends Service implements ImageReader.OnImageAv
         startForeground();
         super.onCreate();
     }
-    private void startForeground(){
-        Intent notificationIntent = new Intent(this, MainActivity.class);
-        notificationIntent.setAction("STOP_CAM_SERVICE");
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_NONE);
-            channel.setLightColor(Color.BLUE);
-            channel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
-            NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            if (nm != null)
-                nm.createNotificationChannel(channel);
-        }
-
-        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("Background camera")
-                .setContentText("Camera open in background. Click here to stop.")
-                .setSmallIcon(R.drawable.ic_photocam)
-                .setContentIntent(pendingIntent)
-                .setTicker("Background camera")
-                .build();
-
-        startForeground(ONGOING_NOTIFICATION_ID, notification);
-    }
 
     @Override
     public IBinder onBind(Intent intent) {
         return new LocalBinder();
     }
-
     public class LocalBinder extends Binder {
         public VideoStreamService getService() {
             return VideoStreamService.this;
@@ -206,6 +180,49 @@ public class VideoStreamService extends Service implements ImageReader.OnImageAv
         return START_STICKY;
     }
 
+    /** Method that make CameraService don't be killed, while system sleeping. */
+    private void startForeground(){
+        Intent notificationIntent = new Intent(this, MainActivity.class);
+        notificationIntent.setAction("STOP_CAM_SERVICE");
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_NONE);
+            channel.setLightColor(Color.BLUE);
+            channel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
+            NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            if (nm != null)
+                nm.createNotificationChannel(channel);
+        }
+
+        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setContentTitle("Background camera")
+                .setContentText("Camera open in background. Click here to stop.")
+                .setSmallIcon(R.drawable.ic_photocam)
+                .setContentIntent(pendingIntent)
+                .setTicker("Background camera")
+                .build();
+
+        startForeground(ONGOING_NOTIFICATION_ID, notification);
+    }
+
+    /** Method that get IP for streaming server thread */
+    private String getLocalIpAddress() {
+        try {
+            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
+                NetworkInterface intf = en.nextElement();
+                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
+                    InetAddress inetAddress = enumIpAddr.nextElement();
+                    if (!inetAddress.isLoopbackAddress()&& inetAddress instanceof Inet4Address) { return inetAddress.getHostAddress(); }
+                }
+            }
+        } catch (SocketException ex) {
+            Log.e("ServerActivity", ex.toString());
+        }
+        return null;
+    }
+
+    /** Camera State Life Cycle */
     private CameraDevice.StateCallback mStateCallback = new CameraDevice.StateCallback() {
         @Override
         public void onOpened(@NonNull CameraDevice cameraDevice) {
@@ -232,6 +249,7 @@ public class VideoStreamService extends Service implements ImageReader.OnImageAv
         }
     };
 
+    /** Preview UI Listener (Not  really use in this project) */
     private TextureView.SurfaceTextureListener mSurfaceTextureListener = new TextureView.SurfaceTextureListener() {
 
         @Override
@@ -253,21 +271,7 @@ public class VideoStreamService extends Service implements ImageReader.OnImageAv
         public void onSurfaceTextureUpdated(SurfaceTexture surfaceTexture) { }
     };
 
-    private String getLocalIpAddress() {
-        try {
-            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
-                NetworkInterface intf = en.nextElement();
-                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
-                    InetAddress inetAddress = enumIpAddr.nextElement();
-                    if (!inetAddress.isLoopbackAddress()&& inetAddress instanceof Inet4Address) { return inetAddress.getHostAddress(); }
-                }
-            }
-        } catch (SocketException ex) {
-            Log.e("ServerActivity", ex.toString());
-        }
-        return null;
-    }
-
+    /** Setup Preview UI  */
     private void startWithPreview(){
         initOverlay();
         startBackgroundThread();
@@ -277,7 +281,6 @@ public class VideoStreamService extends Service implements ImageReader.OnImageAv
         else
             textureView.setSurfaceTextureListener(mSurfaceTextureListener);
     }
-
     @SuppressLint("InflateParams")
     private void initOverlay(){
         LayoutInflater li = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -301,8 +304,34 @@ public class VideoStreamService extends Service implements ImageReader.OnImageAv
         if (windowManager != null)
             windowManager.addView(rootView, params);
     }
+    static class CompareSizesByArea implements Comparator<Size> {
+        @Override
+        public int compare(Size lhs, Size rhs) {
+            return Long.signum((long) lhs.getWidth() * lhs.getHeight() - (long) rhs.getWidth() * rhs.getHeight());
+        }
+    }
 
+    /** Make camera service into background */
+    private void startBackgroundThread() {
+        mBackgroundThread = new HandlerThread("CameraBackground");
+        mBackgroundThread.start();
+        mBackgroundHandler = new Handler(mBackgroundThread.getLooper());
+    }
+
+    private void stopBackgroundThread() {
+        mBackgroundThread.quitSafely();
+        try {
+            mBackgroundThread.join();
+            mBackgroundThread = null;
+            mBackgroundHandler = null;
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /** Camera utils */
     @SuppressWarnings("MissingPermission")
+    // Open/Close camera
     private void openCamera(int width, int height) {
         setUpCameraOutputs();
         configureTransform(width, height);
@@ -322,33 +351,6 @@ public class VideoStreamService extends Service implements ImageReader.OnImageAv
             throw new RuntimeException("Interrupted while trying to lock camera opening.");
         }
     }
-
-    private void setUpCameraOutputs(){
-        final CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
-        try{
-            if (manager == null)
-                return;
-
-            cameraId = manager.getCameraIdList()[0];
-            final CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
-            final StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-
-            if (map != null)
-                mPreviewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class), DESIRED_PREVIEW_SIZE.getWidth(), DESIRED_PREVIEW_SIZE.getHeight());
-
-            previewWidth = mPreviewSize.getWidth();
-            previewHeight = mPreviewSize.getHeight();
-            textureView.setAspectRatio(previewWidth, previewHeight);
-            rgbFrameBitmap = Bitmap.createBitmap(previewWidth, previewHeight, Bitmap.Config.ARGB_8888);
-
-        }catch (final CameraAccessException e) {
-            Log.e(TAG, "Camera access exception!");
-        } catch (final NullPointerException e) {
-            Log.e(TAG, "Null pointer exception!");
-            Log.e(TAG, e.getMessage());
-        }
-    }
-
     private void closeCamera() {
         try {
             mCameraOpenCloseLock.acquire();
@@ -368,6 +370,7 @@ public class VideoStreamService extends Service implements ImageReader.OnImageAv
         }
     }
 
+    // Previewing
     private void startPreview() {
         Log.d(TAG, "startPreview()");
         try {
@@ -408,7 +411,6 @@ public class VideoStreamService extends Service implements ImageReader.OnImageAv
             e.printStackTrace();
         }
     }
-
     private void updatePreview() {
         if (null == mCameraDevice)
             return;
@@ -424,7 +426,6 @@ public class VideoStreamService extends Service implements ImageReader.OnImageAv
             e.printStackTrace();
         }
     }
-
     private void configureTransform(int viewWidth, int viewHeight) {
 
         if (null == textureView || null == mPreviewSize)
@@ -454,7 +455,6 @@ public class VideoStreamService extends Service implements ImageReader.OnImageAv
 
         textureView.setTransform(matrix);
     }
-
     private void closePreviewSession() {
         if (mPreviewSession != null) {
             mPreviewSession.close();
@@ -462,6 +462,32 @@ public class VideoStreamService extends Service implements ImageReader.OnImageAv
         }
     }
 
+    // Dealing pixels
+    private void setUpCameraOutputs(){
+        final CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+        try{
+            if (manager == null)
+                return;
+
+            cameraId = manager.getCameraIdList()[0];
+            final CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
+            final StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+
+            if (map != null)
+                mPreviewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class), DESIRED_PREVIEW_SIZE.getWidth(), DESIRED_PREVIEW_SIZE.getHeight());
+
+            previewWidth = mPreviewSize.getWidth();
+            previewHeight = mPreviewSize.getHeight();
+            textureView.setAspectRatio(previewWidth, previewHeight);
+            rgbFrameBitmap = Bitmap.createBitmap(previewWidth, previewHeight, Bitmap.Config.ARGB_8888);
+
+        }catch (final CameraAccessException e) {
+            Log.e(TAG, "Camera access exception!");
+        } catch (final NullPointerException e) {
+            Log.e(TAG, "Null pointer exception!");
+            Log.e(TAG, e.getMessage());
+        }
+    }
     private void stopRecordingVideo() {
         try{
             mMediaRecorder.stop();
@@ -470,24 +496,6 @@ public class VideoStreamService extends Service implements ImageReader.OnImageAv
             Log.d(TAG, "Stop Recording Fail");
         }
     }
-
-    private void startBackgroundThread() {
-        mBackgroundThread = new HandlerThread("CameraBackground");
-        mBackgroundThread.start();
-        mBackgroundHandler = new Handler(mBackgroundThread.getLooper());
-    }
-
-    private void stopBackgroundThread() {
-        mBackgroundThread.quitSafely();
-        try {
-            mBackgroundThread.join();
-            mBackgroundThread = null;
-            mBackgroundHandler = null;
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
     private static Size chooseOptimalSize(Size[] choices, int width, int height) {
         final int minSize = Math.max(Math.min(width, height), MINIMUM_PREVIEW_SIZE);
         final Size desiredSize = new Size(width, height);
@@ -512,16 +520,22 @@ public class VideoStreamService extends Service implements ImageReader.OnImageAv
         else
             return choices[0];
     }
-
     protected int[] getRgbBytes() {
         imageConverter.run();
         return rgbBytes;
     }
-
     protected ByteArrayOutputStream getFrame() {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         rgbFrameBitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
         return stream;
+    }
+    protected void fillBytes(final Image.Plane[] planes, final byte[][] yuvBytes) {
+        for (int i = 0; i < planes.length; ++i) {
+            final ByteBuffer buffer = planes[i].getBuffer();
+            if (yuvBytes[i] == null)
+                yuvBytes[i] = new byte[buffer.capacity()];
+            buffer.get(yuvBytes[i]);
+        }
     }
 
     @Override
@@ -565,29 +579,13 @@ public class VideoStreamService extends Service implements ImageReader.OnImageAv
         rgbFrameBitmap.setPixels(getRgbBytes(), 0, previewWidth, 0, 0, previewWidth, previewHeight);
         readyForNextImage();
     }
-
     protected void readyForNextImage() {
         if (postInferenceCallback != null)
             postInferenceCallback.run();
     }
 
-    protected void fillBytes(final Image.Plane[] planes, final byte[][] yuvBytes) {
-        for (int i = 0; i < planes.length; ++i) {
-            final ByteBuffer buffer = planes[i].getBuffer();
-            if (yuvBytes[i] == null)
-                yuvBytes[i] = new byte[buffer.capacity()];
-            buffer.get(yuvBytes[i]);
-        }
-    }
 
-    static class CompareSizesByArea implements Comparator<Size> {
-        @Override
-        public int compare(Size lhs, Size rhs) {
-            return Long.signum((long) lhs.getWidth() * lhs.getHeight() - (long) rhs.getWidth() * rhs.getHeight());
-        }
-    }
-
-    // Public Get VideoStreamService Methods
+    /** Public Get VideoStreamService Methods */
     public void setStreamState(int streamState){
         Log.d(TAG, "setStreamState()");
         if(videoStreamListener != null)
