@@ -20,7 +20,7 @@ public class SpeakUtil {
 
     // Voice Recorder Params
     private static String voiceRecordFilename;
-    private static boolean isSentenceCompleted = false;
+    public static boolean isSentenceCompleted = false;
     private static final VoiceRecorder.Callback voiceCallback = new VoiceRecorder.Callback() {
         @Override
         public void onVoiceStart(String recordFilename) {
@@ -45,7 +45,7 @@ public class SpeakUtil {
     private static VoiceRecorder voiceRecorder;
     private static MediaActionSound mediaActionSound;
 
-    private static void startVoiceRecorder(){
+    public static void startVoiceRecorder(){
         Log.d(TAG, "startVoiceRecorder()");
         if(voiceRecorder != null){
             mediaActionSound.play(MediaActionSound.START_VIDEO_RECORDING);
@@ -53,7 +53,7 @@ public class SpeakUtil {
         }
     }
 
-    private static void stopVoiceRecorder(){
+    public static void stopVoiceRecorder(){
         Log.d(TAG, "stopVoiceRecorder()");
         if(voiceRecorder != null){
             mediaActionSound.play(MediaActionSound.STOP_VIDEO_RECORDING);
@@ -83,6 +83,7 @@ public class SpeakUtil {
                     if (! speech.equals("")) {
                         mRobotAPI.startTTS(speech);
                     }
+
                     mRobotAPI.startSpeech2Text(false);
                     Thread.sleep(10000);
                     mRobotAPI.stopListen();

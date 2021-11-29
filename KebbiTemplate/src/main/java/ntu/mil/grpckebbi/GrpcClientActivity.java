@@ -73,10 +73,9 @@ public class GrpcClientActivity extends Activity{
         return mGrpcContext;
     }
 
-
-
     /** VoiceRecorder*/
     public static SpeakUtil mSpeakTool;
+
     /** Grpc Activity Life Cycle */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -263,7 +262,7 @@ public class GrpcClientActivity extends Activity{
                 if (robotCommand.getValue().equals("start")){
                     if(!serviceActive) startVideoStream(); else sendReply(COMMAND_FAILED, "A camera service is already running, stop that service first");
                 } else if (robotCommand.getValue().equals("stop")){
-                    if(serviceActive) stopVideoStream(); else sendReply(COMMAND_FAILED, "No services are currently runnung.");
+                    if(serviceActive) stopVideoStream(); else sendReply(COMMAND_FAILED, "No services are currently running.");
                 }
                 break;
             default:

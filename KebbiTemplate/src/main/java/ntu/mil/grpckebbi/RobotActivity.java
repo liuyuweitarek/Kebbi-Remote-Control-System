@@ -18,6 +18,7 @@ import com.nuwarobotics.service.agent.VoiceResultJsonParser;
 
 import static android.service.controls.ControlsProviderService.TAG;
 import static ntu.mil.grpckebbi.MainActivity.getContext;
+import static ntu.mil.grpckebbi.Voice.SpeakUtil.isSentenceCompleted;
 
 
 public class RobotActivity extends AppCompatActivity {
@@ -51,7 +52,8 @@ public class RobotActivity extends AppCompatActivity {
 
             @Override
             public void onSpeech2TextComplete(boolean b, String s) {
-                nuwa_listenResult = VoiceResultJsonParser.parseVoiceResult(s); ;
+                nuwa_listenResult = VoiceResultJsonParser.parseVoiceResult(s);
+                isSentenceCompleted = true;
             }
 
             @Override

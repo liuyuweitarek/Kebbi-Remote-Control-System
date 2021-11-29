@@ -12,6 +12,8 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import com.google.protobuf.Value;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -223,6 +225,7 @@ public class VoiceRecorder {
                 if (s < 0) s *= -1;
                 s <<= 8;
                 s += Math.abs(buffer[i]);
+//                Log.d(TAG, Integer.toString(s));
                 if (s > AMPLITUDE_THRESHOLD) {
                     return true;
                 }
