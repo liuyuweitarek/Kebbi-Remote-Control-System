@@ -3,7 +3,7 @@
 
 ![](https://img.shields.io/badge/Author-Yuwei%20Liu%20Tarek-blue)
 ![](https://img.shields.io/badge/version-v0.1.0-brightgreen)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green)](https://opensource.org/licenses/MIT)
+
 
 
 ## Quick Start
