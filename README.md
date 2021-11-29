@@ -25,3 +25,11 @@
 |Date          |Version          |Status        | 
 |--------------|-----------------|--------------|
 |2021/11/29    |v0.1.0           |Build Completed!|
+
+## Version Update Log
+### v0.1.0
+1. Add Say()
+2. Add SayThenListen()
+3. Add VideoRecord()
+4. Add VideoStream()
+5. Add VoiveRecord() (Could deal with per frame) 
