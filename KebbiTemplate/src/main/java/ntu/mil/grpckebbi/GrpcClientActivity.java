@@ -287,6 +287,7 @@ public class GrpcClientActivity extends Activity{
                     Log.d(TAG, "here is record");
                     detectService.addRecordListener(videoRecordListener);
                     break;
+
             }
         }
         @Override
