@@ -100,7 +100,7 @@ public class GrpcClientActivity extends Activity{
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mRobotAPI.hideFace();
+//        mRobotAPI.hideFace(); DEMO_COMMENT
     }
 
 
@@ -125,7 +125,8 @@ public class GrpcClientActivity extends Activity{
         ImageView connectBtn = findViewById(R.id.connectBtn);
         connectBtn.setOnClickListener(v -> {
             Connect(ip);
-            mRobotAPI.showFace();
+            setContentView(R.layout.voice_s2t); // DEMO_ADD
+//            mRobotAPI.showFace(); DEMO_COMMENT
         });
 
         localIp = findViewById(R.id.ipAdress);
@@ -237,7 +238,7 @@ public class GrpcClientActivity extends Activity{
                     }
                 } catch(Exception e) {
                     Log.d(TAG, "sendReply()" + e.toString());
-                    mRobotAPI.hideFace();
+//                    mRobotAPI.hideFace(); DEMO_COMMENT
                 }
             }
         }.start();
@@ -250,7 +251,11 @@ public class GrpcClientActivity extends Activity{
                 mSpeakTool.say(robotCommand.getValue());
                 break;
             case "listen":
-                mSpeakTool.sayThenListen(robotCommand.getValue());
+//                mSpeakTool.sayThenListen(robotCommand.getValue());
+                /**
+                                     Here is going to change listen source from Kebbi origin listen method into `Voice Recorder` + `Google S2T API ` to implement continue listening method.
+                                **/
+                sendReply(COMMAND_SUCCESS,"I got it!");
                 break;
             case "video_record":
                 if(robotCommand.getValue().equals("start")){

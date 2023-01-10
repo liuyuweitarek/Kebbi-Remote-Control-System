@@ -29,6 +29,7 @@ import ntu.mil.grpckebbi.Utils.PrefsHelper;
 import static ntu.mil.grpckebbi.Utils.Constants.LOCALE;
 
 public class MainActivity extends RobotActivity{
+//public class MainActivity extends AppCompatActivity{
     public final static String TAG = MainActivity.class.getSimpleName();
 
     private static final int REQUEST_PERMISSIONS = 786;
@@ -69,13 +70,13 @@ public class MainActivity extends RobotActivity{
     protected void onResume() {
         Log.i(TAG, "onResume()");
         super.onResume();
-        initRobotApi();
+//        initRobotApi(); DEMO_COMMENT
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mRobotAPI.release();
+//        mRobotAPI.release(); DEMO_COMMENT
     }
 
     @Override
@@ -88,7 +89,7 @@ public class MainActivity extends RobotActivity{
         return super.onOptionsItemSelected(item);
     }
 
-    private  void initRobotApi(){
+    public void initRobotApi(){
         //Step 1 : Initial Nuwa API Object
         mClientId = new IClientId(this.getPackageName());
         mRobotAPI = new NuwaRobotAPI(this,mClientId);
@@ -106,7 +107,8 @@ public class MainActivity extends RobotActivity{
                 Manifest.permission.WRITE_EXTERNAL_STORAGE,
                 Manifest.permission.READ_EXTERNAL_STORAGE,
                 Manifest.permission.CAMERA,
-                Manifest.permission.RECORD_AUDIO};
+                Manifest.permission.RECORD_AUDIO,
+                Manifest.permission.WAKE_LOCK};
         requestPermissions(permissions, REQUEST_PERMISSIONS);
     }
 
@@ -115,11 +117,12 @@ public class MainActivity extends RobotActivity{
         int readPermission = checkCallingOrSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
         int cameraPermission = checkCallingOrSelfPermission(Manifest.permission.CAMERA);
         int recordPermission = checkCallingOrSelfPermission(Manifest.permission.RECORD_AUDIO);
-
+        int wakeupPermission = checkCallingOrSelfPermission(Manifest.permission.WAKE_LOCK);
         return (writePermission != PackageManager.PERMISSION_GRANTED) ||
                 (readPermission != PackageManager.PERMISSION_GRANTED) ||
                 (cameraPermission != PackageManager.PERMISSION_GRANTED) ||
-                (recordPermission != PackageManager.PERMISSION_GRANTED);
+                (recordPermission != PackageManager.PERMISSION_GRANTED) ||
+                (wakeupPermission != PackageManager.PERMISSION_GRANTED);
     }
 
     @Override

@@ -54,7 +54,11 @@ protobuf {
         }
     }
 }
-
+allprojects {
+    repositories {
+        maven { url 'https://jitpack.io' }
+    }
+}
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.appcompat:appcompat:1.3.1'
@@ -77,6 +81,10 @@ dependencies {
     implementation "io.grpc:grpc-stub:${grpcVersion}"
     implementation 'javax.annotation:javax.annotation-api:1.3.2'
     protobuf 'com.google.protobuf:protobuf-java:3.3.1'
+
+    //Draw Chart
+    implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
+    implementation 'com.github.Pfuster12:LiveChart:1.3.5'
 
 }
 

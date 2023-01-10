@@ -109,11 +109,17 @@ class MainLoop(object):
         camState.camera_close = True
         self.robot.videoStream('stop')
 
+    def test_listen(self):
+        while True:
+            inputText = input("Please type:")
+            result = self.robot.say(inputText, listen=True)
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--rpyc_port', type=int, default=1234, help='rpyc port of parent')
     args = parser.parse_args()
     
     mainLoop = MainLoop(args)
-    mainLoop.start()
+    # mainLoop.start()
+    mainLoop.test_listen()
     
