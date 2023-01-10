@@ -69,7 +69,7 @@ public class SpeakUtil {
 
 
     public static void say(String speech){
-        mRobotAPI.startTTS(speech);
+//        mRobotAPI.startTTS(speech); DEMO_COMMENT
         GrpcClientActivity.getInstance().sendReply(COMMAND_SUCCESS, null);
     }
 
