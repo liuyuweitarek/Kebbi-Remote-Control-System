@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -39,6 +40,9 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -76,8 +80,13 @@ public class GrpcClientActivity extends Activity{
     /** This params are for Demo: VoiceRecorder+GoogleS2T. */
     public TextView txtDbValue, txtRecordFileName;
     private LineChart mLineChart;
-    private MediaActionSound mMediaActionSound;
-    private VoiceRecorder mVoiceRecorder;
+    @BindView(R.id.status)
+    TextView status;
+    @BindView(R.id.textMessage)
+    TextView textMessage;
+    @BindView(R.id.listview)
+    ListView listView;
+    private List<String> stringList;
 
     /** Services State Params */
     private static boolean serviceActive = false;
@@ -92,6 +101,8 @@ public class GrpcClientActivity extends Activity{
 
     /** VoiceRecorder*/
     public static SpeakUtil mSpeakTool;
+    private MediaActionSound mMediaActionSound;
+    private VoiceRecorder mVoiceRecorder;
 
     /** Grpc Activity Life Cycle */
     @Override
@@ -160,6 +171,9 @@ public class GrpcClientActivity extends Activity{
 
         mVoiceRecorder = new VoiceRecorder(this, voiceCallback);
         mMediaActionSound = new MediaActionSound();
+
+
+
         initChart();
     }
 
