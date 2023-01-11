@@ -7,19 +7,18 @@ import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.speech.tts.Voice;
 import android.util.Log;
+import android.webkit.MimeTypeMap;
 
 import androidx.annotation.NonNull;
-
-import com.google.protobuf.Value;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class VoiceRecorder {
     private static final String TAG = VoiceRecorder.class.getSimpleName();
@@ -35,9 +34,8 @@ public class VoiceRecorder {
     private static final int MAX_SPEECH_LENGTH_MILLIS = 30 * 1000;
 
     private static final String AUDIO_RECORDER_FILE_EXT_WAV = ".wav";
-    private static final String AUDIO_RECORDER_FOLDER = "AudioRecorder";
-    private static final String AUDIO_RECORDER_TEMP_FILE = "record_temp.raw";
-
+    private static final String AUDIO_RECORDER_FOLDER = "Music";
+    private static final String AUDIO_RECORDER_TEMP_FILE = "record_temp.wav";
 
     public static abstract class Callback {
         public void onVoiceStart(String recordFilename) {
@@ -48,26 +46,30 @@ public class VoiceRecorder {
         }
     }
 
-    private static Context mContext;
+    private final Context mContext;
     private final Callback mCallback;
+    private Thread recordThread;
     private AudioRecord mAudioRecord;
-    private Thread recordingThread;
-    private byte[] mBuffer;
-    private final Object mLock = new Object();
     private boolean isRecording = false;
-    private boolean sentenceCompleted ;
+    private byte[] mBuffer;
+    private int bufferSize;
+    private final Object mLock = new Object();
+    private String mFilename, mTempFilename, mUIFilename;
     private long mLastVoiceHeardMillis = Long.MAX_VALUE;
     private long mVoiceStartedMillis;
-    private int bufferSize;
-    private String mFilename;
-
+    private boolean sentenceCompleted ;
+    public static String getMIMEType(String url) {
+        String mType = null;
+        String mExtension = MimeTypeMap.getFileExtensionFromUrl(url);
+        if (mExtension != null) {
+            mType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(mExtension);
+        }
+        return mType;
+    }
     public VoiceRecorder(Context context, @NonNull Callback callback) {
         mContext = context;
         mCallback = callback;
     }
-
-
-
     public void start() {
         Log.d(TAG, "start()");
 
@@ -80,26 +82,30 @@ public class VoiceRecorder {
         mAudioRecord.startRecording();
         isRecording = true;
 
-        recordingThread = new Thread(new ProcessVoice());
-        recordingThread.start();
-    }
+        recordThread = new Thread(new ProcessVoice());
+        recordThread.start();
 
+    }
     public void stop() {
         Log.d(TAG, "stop()");
+
         isRecording = false;
+
         synchronized (mLock) {
             dismiss();
-            if (recordingThread != null) {
-                recordingThread.interrupt();
-                recordingThread = null;
+            if (recordThread != null) {
+                recordThread.interrupt();
+                recordThread = null;
             }
             if (mAudioRecord != null) {
+
                 mAudioRecord.stop();
                 mAudioRecord.release();
                 mAudioRecord = null;
             }
             mBuffer = null;
-            copyWavFile(getTempFilename(), mFilename);
+
+            copyWavFile(mTempFilename, mFilename);
             deleteTempFile();
         }
     }
@@ -108,14 +114,6 @@ public class VoiceRecorder {
         if (mLastVoiceHeardMillis != Long.MAX_VALUE ) {
             mLastVoiceHeardMillis = Long.MAX_VALUE;
             mCallback.onVoiceEnd();
-        }
-    }
-
-    public int getSampleRate() {
-        if (mAudioRecord != null) {
-            return mAudioRecord.getSampleRate();
-        }else{
-            return 16000;
         }
     }
 
@@ -138,27 +136,27 @@ public class VoiceRecorder {
     private class ProcessVoice implements Runnable {
         @Override
         public void run() {
-
-            // 這裡開始是Record的部分
-            String filename = getTempFilename();
+            mTempFilename = getTempFilename();
             mFilename = getFilename();
             FileOutputStream os = null;
             try {
-                os = new FileOutputStream(filename);
+                os = new FileOutputStream(mTempFilename);
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
 
-            while (isRecording){
+            while (isRecording) {
                 synchronized (mLock) {
-                    if (Thread.currentThread().isInterrupted()) break;
-
+                    if (Thread.currentThread().isInterrupted()) {
+                        Log.d(TAG,"ProcessVoice_isInterrupt");
+                        break;
+                    }
                     // Read voice bytes here. mBuffer has the info that we want to deal with.
                     final int read = mAudioRecord.read(mBuffer, 0, mBuffer.length);
                     final long now = System.currentTimeMillis();
 
                     // Record file here
-                    if(AudioRecord.ERROR_INVALID_OPERATION != read){
+                    if (AudioRecord.ERROR_INVALID_OPERATION != read) {
                         try {
                             os.write(mBuffer);
                         } catch (IOException e) {
@@ -172,12 +170,12 @@ public class VoiceRecorder {
                         }
                     }
 
-                    // Control the process of hearing voice here. (Heard / unHeard)
+                    // If it doesn't hear any voice for three seconds, then stop recording the voice.
                     if (isHearingVoice(mBuffer, read)) {
                         if (mLastVoiceHeardMillis == Long.MAX_VALUE) {
                             mVoiceStartedMillis = now;
                             sentenceCompleted = false;
-                            mCallback.onVoiceStart(mFilename);
+                            mCallback.onVoiceStart(mUIFilename);
                         }
 
                         if (now - mVoiceStartedMillis > MAX_SPEECH_LENGTH_MILLIS) {
@@ -186,7 +184,6 @@ public class VoiceRecorder {
 
                         mCallback.onVoice(mBuffer, read, sentenceCompleted);
                         mLastVoiceHeardMillis = now;
-
                         if (now - mVoiceStartedMillis > MAX_SPEECH_LENGTH_MILLIS) {
                             end();
                             try {
@@ -196,11 +193,11 @@ public class VoiceRecorder {
                             }
                         }
                     } else if (mLastVoiceHeardMillis != Long.MAX_VALUE) {
-                        if ( now - mLastVoiceHeardMillis > SPEECH_TIMEOUT_MILLIS) {
+                        if (now - mLastVoiceHeardMillis > SPEECH_TIMEOUT_MILLIS) {
                             sentenceCompleted = true;
                         }
-                        mCallback.onVoice(mBuffer, read,sentenceCompleted);
-                        if ( now - mLastVoiceHeardMillis > SPEECH_TIMEOUT_MILLIS) {
+                        mCallback.onVoice(mBuffer, read, sentenceCompleted);
+                        if (now - mLastVoiceHeardMillis > SPEECH_TIMEOUT_MILLIS) {
                             end();
                             try {
                                 os.close();
@@ -212,7 +209,6 @@ public class VoiceRecorder {
                 }
             }
         }
-
         private void end() {
             mLastVoiceHeardMillis = Long.MAX_VALUE;
             mCallback.onVoiceEnd();
@@ -225,7 +221,6 @@ public class VoiceRecorder {
                 if (s < 0) s *= -1;
                 s <<= 8;
                 s += Math.abs(buffer[i]);
-//                Log.d(TAG, Integer.toString(s));
                 if (s > AMPLITUDE_THRESHOLD) {
                     return true;
                 }
@@ -233,7 +228,6 @@ public class VoiceRecorder {
             return false;
         }
     }
-
     private void copyWavFile(String in, String out){
         try{
             FileInputStream is = new FileInputStream(in);
@@ -312,21 +306,25 @@ public class VoiceRecorder {
     }
 
     private String getFilename(){
+
         String filepath = Environment.getExternalStorageDirectory().getPath();
         File file = new File(filepath,AUDIO_RECORDER_FOLDER);
-
         if(!file.exists()){
             boolean created = file.mkdirs();
             Log.d(TAG, "File created: " + created);
         }
 
-        ContentValues values = new ContentValues(3);
-        values.put(MediaStore.Video.Media.MIME_TYPE, "audio/wav");
+        ContentValues values = new ContentValues();
+        values.put(MediaStore.Video.Media.MIME_TYPE, getMIMEType(file.getAbsolutePath() + "/" + System.currentTimeMillis() + AUDIO_RECORDER_FILE_EXT_WAV));
         values.put(MediaStore.Video.Media.TITLE, file.getName());
         values.put(MediaStore.Video.Media.DATA, file.getAbsolutePath());
-        mContext.getContentResolver().insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values);
+        mContext.getContentResolver().insert(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, values);
 
-        return (file.getAbsolutePath() + "/" + System.currentTimeMillis() + AUDIO_RECORDER_FILE_EXT_WAV);
+        SimpleDateFormat sdf = new SimpleDateFormat("dd_HH_mm_ss");
+        Date filedate = new Date(System.currentTimeMillis());
+        String filename = sdf.format(filedate);
+        mUIFilename = filename + AUDIO_RECORDER_FILE_EXT_WAV;
+        return (file.getAbsolutePath() + "/" + filename + AUDIO_RECORDER_FILE_EXT_WAV);
     }
 
     private String getTempFilename(){
@@ -336,9 +334,10 @@ public class VoiceRecorder {
         if(!file.exists()){
             boolean created = file.mkdirs();
             Log.d(TAG, "File created: " + created);
+            Log.d(TAG, "File created: " + filepath);
         }
 
-        File tempFile = new File(filepath,AUDIO_RECORDER_TEMP_FILE);
+        File tempFile = new File(file.getAbsolutePath(),AUDIO_RECORDER_TEMP_FILE);
 
         if(tempFile.exists()){
             boolean deleted = tempFile.delete();
