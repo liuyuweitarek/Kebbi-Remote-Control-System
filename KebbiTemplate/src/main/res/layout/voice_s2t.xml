@@ -9,13 +9,72 @@
 
     <com.github.mikephil.charting.charts.LineChart
         android:id="@+id/liveChart"
-        android:layout_width="404dp"
-        android:layout_height="511dp"
+        android:layout_width="match_parent"
+        android:layout_height="450dp"
         android:layout_marginBottom="144dp"
-        app:layout_constraintBottom_toTopOf="@+id/guideline"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent">
+
+    </com.github.mikephil.charting.charts.LineChart>
+
+    <RelativeLayout
+        android:id="@+id/relativeLayout"
+        android:layout_width="426dp"
+        android:layout_height="151dp"
+        android:background="#e9e8e5"
+        app:layout_constraintBottom_toTopOf="@+id/guideline"
+        app:layout_constraintTop_toBottomOf="@+id/liveChart"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:context=".MainActivity">
+
+        <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:tools="http://schemas.android.com/tools"
+            android:id="@+id/card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:background="#FFFFFF"
+            android:padding="8dp"
+            android:theme="@style/ThemeOverlay.AppCompat.Light">
+
+            <LinearLayout
+                android:id="@+id/linear"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/status"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="listening..."
+                    android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+                    android:visibility="visible"
+                    tools:visibility="visible" />
+
+                <TextView
+                    android:id="@+id/textMessage"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                    tools:text="It is fine today." />
+
+            </LinearLayout>
+        </FrameLayout>
+
+        <ListView xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/listview"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/card"
+            android:layout_margin="8dp"
+            android:background="#fffde2"
+            android:stackFromBottom="true"
+            android:transcriptMode="normal" />
+
+    </RelativeLayout>
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline"
@@ -23,6 +82,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         app:layout_constraintGuide_percent="0.9" />
+
     <TextView
         android:id="@+id/txtName"
         android:text="Name:"
