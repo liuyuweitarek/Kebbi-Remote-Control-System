@@ -10,8 +10,10 @@ import android.graphics.Color;
 import android.media.MediaActionSound;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -63,6 +65,7 @@ import static ntu.mil.grpckebbi.Vision.Constants.STREAM_PORT;
 import ntu.mil.grpckebbi.Vision.DetectService;
 import ntu.mil.grpckebbi.Vision.VideoRecordListener;
 import ntu.mil.grpckebbi.Vision.VideoStreamService;
+import ntu.mil.grpckebbi.Voice.GoogleSpeechService;
 import ntu.mil.grpckebbi.Voice.SpeakUtil;
 import ntu.mil.grpckebbi.Voice.VoiceRecorder;
 
@@ -94,6 +97,12 @@ public class GrpcClientActivity extends Activity{
     private static int cameraMode;
     private static boolean messageConfirmed;
 
+    //Google speech api
+    private GoogleSpeechService googleSpeechService;
+    private String googleTranscript = "";
+    private boolean apiReady = true;
+    private boolean isSentenceCompleted = false;
+
     /** Make other Classes could use sendReply() / excecuteAction() */
     public static GrpcClientActivity getInstance() {
         return mGrpcContext;
@@ -122,12 +131,18 @@ public class GrpcClientActivity extends Activity{
         WindowUtils.updateUI(GrpcClientActivity.this);
         if(localIp != null)
             localIp.setText(GetLocalIpAddress());
+
+        if(googleSpeechService == null)
+            startGoogleSpeechService();
     }
 
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if(googleSpeechService != null ){
+            stopGoogleSpeechService();
+        }
 //        mRobotAPI.hideFace(); DEMO_COMMENT
     }
 
@@ -169,11 +184,18 @@ public class GrpcClientActivity extends Activity{
 
         mLineChart = findViewById(R.id.liveChart);
 
-        mVoiceRecorder = new VoiceRecorder(this, voiceCallback);
+        mVoiceRecorder = new VoiceRecorder(GrpcClientActivity.this, voiceCallback);
         mMediaActionSound = new MediaActionSound();
 
+        ButterKnife.bind(this);
 
+        // This line is needed, not only justfor Demo.
+        googleSpeechService = new GoogleSpeechService(GrpcClientActivity.this);
 
+        stringList = new ArrayList<>();
+        adapter = new ArrayAdapter(this,
+                android.R.layout.simple_list_item_1, stringList);
+        listView.setAdapter(adapter);
         initChart();
     }
 
@@ -266,7 +288,7 @@ public class GrpcClientActivity extends Activity{
         if(!ip.isEmpty()) {
             try {
                 ManagedChannel managedChannel = ManagedChannelBuilder.forAddress(ip, port)
-                        .usePlaintext(true)
+                        .usePlaintext()
                         //.keepAliveWithoutCalls(true)
                         .build();
                 mInteracter = InteractGrpc.newBlockingStub(managedChannel);
@@ -371,7 +393,7 @@ public class GrpcClientActivity extends Activity{
                 /**
                                      Here is going to change listen source from Kebbi origin listen method into `Voice Recorder` + `Google S2T API ` to implement continue listening method.
                                 **/
-                sendReply(COMMAND_SUCCESS,"I got it!");
+//                sendReply(COMMAND_SUCCESS,"I got it!");
                 break;
             case "video_record":
                 if(robotCommand.getValue().equals("start")){
@@ -519,17 +541,27 @@ public class GrpcClientActivity extends Activity{
         @Override
         public void onVoiceStart(final String recordFilename) {
             Log.d(TAG, "onVoiceStart()");
+            if(googleSpeechService == null) {
+                return;
+            }
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     txtRecordFileName.setText(recordFilename);
                 }
             });
+            isSentenceCompleted = false;
+            googleTranscript = "";
+            googleSpeechService.startRecognizing(mVoiceRecorder.getSampleRate());
+
         }
 
         @Override
         public void onVoice(final byte[] data, final int size, boolean sentenceCompleted) {
             Log.d(TAG, "onVoice()");
+            if(googleSpeechService == null) {
+                return;
+            }
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -538,11 +570,21 @@ public class GrpcClientActivity extends Activity{
                     txtDbValue.setText(db_value);
                 }
             });
+            isSentenceCompleted = sentenceCompleted;
+            googleSpeechService.recognize(data, size);
         }
 
         @Override
         public void onVoiceEnd() {
             Log.d(TAG, "onVoiceEnd()");
+            if(googleSpeechService == null) {
+                return;
+            }
+            googleSpeechService.finishRecognizing();
+            if(TextUtils.isEmpty(googleTranscript))
+                googleTranscript = "TIMEOUT";
+
+            sendReply(COMMAND_SUCCESS, googleTranscript);
             stopVoiceRecorder();
         }
     };
@@ -550,6 +592,7 @@ public class GrpcClientActivity extends Activity{
     private void startVoiceRecorder(){
         if(mVoiceRecorder != null){
             mMediaActionSound.play(MediaActionSound.START_VIDEO_RECORDING);
+            apiReady = true;
             mVoiceRecorder.start();
         }
     }
@@ -560,4 +603,74 @@ public class GrpcClientActivity extends Activity{
             mVoiceRecorder.stop();
         }
     }
+
+    private ArrayAdapter adapter;
+
+
+    private void startGoogleSpeechService(){
+        Intent googleSpeechAPIService = new Intent(this, GoogleSpeechService.class);
+        bindService(googleSpeechAPIService, speechConnection, BIND_AUTO_CREATE);
+        this.startService(googleSpeechAPIService);
+    }
+
+    private void stopGoogleSpeechService(){
+
+        stopVoiceRecorder();
+        googleSpeechService.removeListener(mSpeechServiceListener);
+        unbindService(speechConnection);
+        googleSpeechService = null;
+    }
+
+    private final ServiceConnection speechConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder binder) {
+            googleSpeechService = GoogleSpeechService.from(binder);
+            googleSpeechService.addListener(mSpeechServiceListener);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            googleSpeechService = null;
+        }
+    };
+
+    private final GoogleSpeechService.Listener mSpeechServiceListener = new GoogleSpeechService.Listener() {
+        @Override
+        public void onSpeechRecognized(String text, boolean isFinal) {
+            if (textMessage != null && !TextUtils.isEmpty(text)) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (isFinal) {
+                            textMessage.setText(null);
+                            stringList.add(0,text);
+                            adapter.notifyDataSetChanged();
+                        } else {
+                            textMessage.setText(text);
+                        }
+                    }
+                });
+            }
+            if(isFinal){
+                googleTranscript += text;
+                if(mVoiceRecorder != null && isSentenceCompleted) {
+                    mVoiceRecorder.dismiss();
+                    isSentenceCompleted = false;
+                }
+            }
+        }
+
+        @Override
+        public void onApiMessage(String msg) {
+            if(msg.equals("completed")) {
+                apiReady = true;
+            }
+            if(msg.equals("api_error")) {
+                sendReply(COMMAND_SUCCESS, "API_ERROR");
+                stopVoiceRecorder();
+                apiReady = false;
+            }
+        }
+    };
 }

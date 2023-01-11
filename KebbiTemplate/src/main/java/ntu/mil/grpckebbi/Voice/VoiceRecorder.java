@@ -133,6 +133,13 @@ public class VoiceRecorder {
         return null;
     }
 
+    public int getSampleRate() {
+        if (mAudioRecord != null) {
+            return mAudioRecord.getSampleRate();
+        }
+        return 0;
+    }
+
     private class ProcessVoice implements Runnable {
         @Override
         public void run() {
