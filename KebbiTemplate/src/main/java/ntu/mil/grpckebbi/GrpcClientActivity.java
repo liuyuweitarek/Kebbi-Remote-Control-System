@@ -541,6 +541,7 @@ public class GrpcClientActivity extends Activity{
         @Override
         public void onVoiceStart(final String recordFilename) {
             Log.d(TAG, "onVoiceStart()");
+            startGoogleSpeechService();
             if(googleSpeechService == null) {
                 return;
             }

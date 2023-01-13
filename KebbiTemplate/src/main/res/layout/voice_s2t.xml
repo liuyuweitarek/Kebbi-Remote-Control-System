@@ -34,7 +34,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
-            android:background="#FFFFFF"
             android:padding="8dp"
             android:theme="@style/ThemeOverlay.AppCompat.Light">
 
@@ -63,7 +62,7 @@
             </LinearLayout>
         </FrameLayout>
 
-        <ListView xmlns:android="http://schemas.android.com/apk/res/android"
+        <ListView
             android:id="@+id/listview"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
