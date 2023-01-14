@@ -3,6 +3,7 @@
 *.ap_
 *.aab
 
+credential.json
 # Files for the ART/Dalvik VM
 *.dex
 
